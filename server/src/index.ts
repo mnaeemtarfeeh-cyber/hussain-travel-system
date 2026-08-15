@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -32,6 +33,14 @@ app.use("/api/invoices", invoicesRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/expenses", expensesRouter);
 app.use("/api/dashboard", dashboardRouter);
+
+if (process.env.NODE_ENV === "production") {
+  const clientDist = path.join(__dirname, "../../client/dist");
+  app.use(express.static(clientDist));
+  app.get(/^\/(?!api).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 app.use(
   (err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
