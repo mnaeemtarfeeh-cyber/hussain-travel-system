@@ -94,10 +94,7 @@ export default function Drivers() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Drivers</h1>
-          <p className="text-sm text-muted-foreground">{drivers?.length ?? 0} drivers</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{drivers?.length ?? 0} drivers</p>
         {canWrite && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>

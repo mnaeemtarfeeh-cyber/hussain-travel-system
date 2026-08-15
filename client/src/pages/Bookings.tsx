@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Plus, Pencil } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { money } from "@/lib/currency";
 import type { Booking, BookingStatus, Customer, Driver, Vehicle } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,10 +161,7 @@ export default function Bookings() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Bookings</h1>
-          <p className="text-sm text-muted-foreground">{bookings?.length ?? 0} bookings</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{bookings?.length ?? 0} bookings</p>
         {canWrite && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -320,7 +318,7 @@ export default function Bookings() {
                 {b.pickupLocation} → {b.dropoffLocation}
               </TableCell>
               <TableCell>{format(new Date(b.pickupDate), "PP p")}</TableCell>
-              <TableCell>{Number(b.fare).toFixed(2)}</TableCell>
+              <TableCell className="font-mono">{money(b.fare)}</TableCell>
               <TableCell>
                 <StatusBadge status={b.status} />
               </TableCell>

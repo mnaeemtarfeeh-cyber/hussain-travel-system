@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Plus, DollarSign } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { money } from "@/lib/currency";
 import type { Booking, Invoice } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
-
-function money(n: number | string) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(n));
-}
 
 export default function Invoices() {
   const { user } = useAuth();
@@ -83,10 +80,7 @@ export default function Invoices() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Invoices</h1>
-          <p className="text-sm text-muted-foreground">{invoices?.length ?? 0} invoices</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{invoices?.length ?? 0} invoices</p>
         {canCreate && (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>

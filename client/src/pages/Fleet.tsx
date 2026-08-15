@@ -111,10 +111,7 @@ export default function Fleet() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Fleet</h1>
-          <p className="text-sm text-muted-foreground">{vehicles?.length ?? 0} vehicles</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{vehicles?.length ?? 0} vehicles</p>
         {canWrite && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>

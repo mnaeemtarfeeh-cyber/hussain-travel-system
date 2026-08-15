@@ -109,10 +109,7 @@ export default function Customers() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Customers</h1>
-          <p className="text-sm text-muted-foreground">{data?.total ?? 0} total customers</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{data?.total ?? 0} total customers</p>
         {canWrite && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>

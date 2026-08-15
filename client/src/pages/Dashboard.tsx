@@ -2,14 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { money } from "@/lib/currency";
 import type { DashboardSummary } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-
-function money(n: number) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
-}
 
 export default function Dashboard() {
   const { data, isLoading } = useQuery<DashboardSummary>({
@@ -24,66 +21,54 @@ export default function Dashboard() {
     { key: "CANCELLED", label: "Cancelled" },
   ];
 
-  const profit = (data?.incomeThisMonth ?? 0) - (data?.expenseThisMonth ?? 0);
+  const income = data?.incomeThisMonth ?? 0;
+  const expense = data?.expenseThisMonth ?? 0;
+  const profit = income - expense;
+  const totalBookings = Object.values(data?.bookingsByStatus ?? {}).reduce((a, b) => a + (b ?? 0), 0);
+
+  const kpis = [
+    { label: "Income this month", value: money(income), accent: "var(--navy)" },
+    { label: "Expenses this month", value: money(expense), accent: "var(--destructive)" },
+    { label: "Net profit", value: money(profit), accent: "var(--gold)" },
+    { label: "Bookings this month", value: String(totalBookings), accent: "var(--navy)" },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of bookings and finances this month.</p>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">This month</p>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Income this month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-success">
-              {isLoading ? "…" : money(data?.incomeThisMonth ?? 0)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Expense this month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-destructive">
-              {isLoading ? "…" : money(data?.expenseThisMonth ?? 0)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Net profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className={`text-2xl font-semibold ${profit >= 0 ? "text-success" : "text-destructive"}`}>
-              {isLoading ? "…" : money(profit)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {statuses.map(({ key, label }) => (
-          <Card key={key}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {kpis.map((kpi) => (
+          <Card key={kpi.label} style={{ borderTopWidth: 3, borderTopColor: kpi.accent }}>
             <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{label}</span>
-                <Badge tone="muted">{data?.bookingsByStatus[key] ?? 0}</Badge>
-              </div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
+              <p className="mt-1.5 font-mono text-lg font-bold text-foreground">
+                {isLoading ? "…" : kpi.value}
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      <div>
+        <p className="mb-2 text-sm font-bold text-foreground">Bookings by status</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {statuses.map(({ key, label }) => (
+            <Card key={key}>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                  <Badge tone="muted">{data?.bookingsByStatus[key] ?? 0}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Upcoming pickups</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 pt-4">
+          <p className="mb-1 text-sm font-bold text-foreground">Upcoming pickups</p>
           {!data?.upcomingBookings.length && (
             <p className="text-sm text-muted-foreground">No upcoming pending or confirmed bookings.</p>
           )}
@@ -91,7 +76,7 @@ export default function Dashboard() {
             <Link
               key={b.id}
               to={`/bookings`}
-              className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted/40"
+              className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted/50"
             >
               <div>
                 <p className="font-medium">{b.customer?.name ?? "Unknown customer"}</p>

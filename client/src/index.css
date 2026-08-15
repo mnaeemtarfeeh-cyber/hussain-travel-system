@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -25,6 +26,12 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-cream: var(--cream);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -34,67 +41,105 @@
 :root {
   --radius: 0.5rem;
 
-  --background: oklch(0.99 0.002 260);
-  --foreground: oklch(0.2 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 260);
-  --border: oklch(0.9 0.005 260);
-  --input: oklch(0.9 0.005 260);
-  --ring: oklch(0.55 0.14 255);
+  /* Brand — fixed navy/gold identity, independent of light/dark mode */
+  --navy: #0c2137;
+  --navy-deep: #061c32;
+  --gold: #c7a24a;
+  --gold-soft: #e0c894;
+  --cream: #f3eee2;
 
-  --muted: oklch(0.96 0.004 260);
-  --muted-foreground: oklch(0.48 0.015 260);
+  --background: #f7f6f2;
+  --foreground: #10263f;
+  --card: #ffffff;
+  --card-foreground: #10263f;
+  --border: #e5e1d8;
+  --input: #dfe4e8;
+  --ring: #c7a24a;
 
-  --primary: oklch(0.4 0.14 255);
-  --primary-foreground: oklch(0.98 0.005 260);
+  --muted: #f3eee2;
+  --muted-foreground: #7c6f63;
 
-  --secondary: oklch(0.96 0.004 260);
-  --secondary-foreground: oklch(0.25 0.02 260);
+  --primary: #0c2137;
+  --primary-foreground: #ffffff;
 
-  --accent: oklch(0.96 0.02 255);
-  --accent-foreground: oklch(0.4 0.14 255);
+  --secondary: #eadfc8;
+  --secondary-foreground: #0c2137;
 
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0.005 260);
+  --accent: #f3eee2;
+  --accent-foreground: #8a6b27;
 
-  --success: oklch(0.55 0.14 150);
-  --success-foreground: oklch(0.98 0.005 260);
+  --destructive: #a74632;
+  --destructive-foreground: #ffffff;
 
-  --warning: oklch(0.7 0.16 80);
-  --warning-foreground: oklch(0.2 0.02 260);
+  --success: #2f7d55;
+  --success-foreground: #ffffff;
+
+  --warning: #ad832e;
+  --warning-foreground: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.17 0.01 260);
-    --foreground: oklch(0.95 0.005 260);
-    --card: oklch(0.21 0.012 260);
-    --card-foreground: oklch(0.95 0.005 260);
-    --border: oklch(0.3 0.01 260);
-    --input: oklch(0.3 0.01 260);
-    --ring: oklch(0.65 0.14 255);
+  :root:not([data-theme="light"]) {
+    --background: #11202f;
+    --foreground: #e9edf1;
+    --card: #16273a;
+    --card-foreground: #e9edf1;
+    --border: #2a3d51;
+    --input: #2a3d51;
+    --ring: #c7a24a;
 
-    --muted: oklch(0.25 0.01 260);
-    --muted-foreground: oklch(0.65 0.012 260);
+    --muted: #1c2f42;
+    --muted-foreground: #9aa8b6;
 
-    --primary: oklch(0.7 0.14 255);
-    --primary-foreground: oklch(0.15 0.02 260);
+    --primary: #d7b56f;
+    --primary-foreground: #0b1e31;
 
-    --secondary: oklch(0.26 0.012 260);
-    --secondary-foreground: oklch(0.95 0.005 260);
+    --secondary: #223549;
+    --secondary-foreground: #e9edf1;
 
-    --accent: oklch(0.28 0.03 255);
-    --accent-foreground: oklch(0.8 0.1 255);
+    --accent: #2a3d51;
+    --accent-foreground: #e0c894;
 
-    --destructive: oklch(0.65 0.2 25);
-    --destructive-foreground: oklch(0.15 0.02 260);
+    --destructive: #c25c46;
+    --destructive-foreground: #0b1e31;
 
-    --success: oklch(0.65 0.14 150);
-    --success-foreground: oklch(0.15 0.02 260);
+    --success: #4c9c74;
+    --success-foreground: #0b1e31;
 
-    --warning: oklch(0.75 0.16 80);
-    --warning-foreground: oklch(0.15 0.02 260);
+    --warning: #c79a4b;
+    --warning-foreground: #0b1e31;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #11202f;
+  --foreground: #e9edf1;
+  --card: #16273a;
+  --card-foreground: #e9edf1;
+  --border: #2a3d51;
+  --input: #2a3d51;
+  --ring: #c7a24a;
+
+  --muted: #1c2f42;
+  --muted-foreground: #9aa8b6;
+
+  --primary: #d7b56f;
+  --primary-foreground: #0b1e31;
+
+  --secondary: #223549;
+  --secondary-foreground: #e9edf1;
+
+  --accent: #2a3d51;
+  --accent-foreground: #e0c894;
+
+  --destructive: #c25c46;
+  --destructive-foreground: #0b1e31;
+
+  --success: #4c9c74;
+  --success-foreground: #0b1e31;
+
+  --warning: #c79a4b;
+  --warning-foreground: #0b1e31;
 }
 
 * {

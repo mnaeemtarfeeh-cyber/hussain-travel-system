@@ -49,10 +49,7 @@ export default function Users() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Staff & Roles</h1>
-          <p className="text-sm text-muted-foreground">{users?.length ?? 0} staff accounts</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{users?.length ?? 0} staff accounts</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setForm(emptyForm)}>

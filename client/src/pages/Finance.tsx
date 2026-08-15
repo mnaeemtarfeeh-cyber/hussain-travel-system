@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { api } from "@/lib/api";
+import { money } from "@/lib/currency";
 import type { Expense, ExpenseCategory, Payment, Vehicle, Driver } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-function money(n: number | string) {
-  return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(n));
-}
+import { Card, CardContent } from "@/components/ui/card";
 
 type ExpenseForm = {
   category: ExpenseCategory;
@@ -69,10 +66,7 @@ export default function Finance() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Finance</h1>
-          <p className="text-sm text-muted-foreground">Income and expense ledger</p>
-        </div>
+        <p className="text-sm text-muted-foreground">Income and expense ledger</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setForm(emptyForm)}>
@@ -169,30 +163,22 @@ export default function Finance() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total income</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-success">{money(totalIncome)}</p>
+        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--navy)" }}>
+          <CardContent className="pt-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total income</p>
+            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalIncome)}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total expense</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-destructive">{money(totalExpense)}</p>
+        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--destructive)" }}>
+          <CardContent className="pt-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total expense</p>
+            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalExpense)}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Net</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className={`text-2xl font-semibold ${totalIncome - totalExpense >= 0 ? "text-success" : "text-destructive"}`}>
-              {money(totalIncome - totalExpense)}
-            </p>
+        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--gold)" }}>
+          <CardContent className="pt-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Net</p>
+            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalIncome - totalExpense)}</p>
           </CardContent>
         </Card>
       </div>
