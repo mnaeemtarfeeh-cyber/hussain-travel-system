@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useDebouncedValue } from "@/lib/useDebounce";
@@ -9,229 +9,163 @@ import type { Customer } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 type CustomerForm = {
   name: string;
   phone: string;
   email: string;
+  passportId: string;
+  nationality: string;
   address: string;
-  notes: string;
 };
 
-const emptyForm: CustomerForm = { name: "", phone: "", email: "", address: "", notes: "" };
+const emptyForm: CustomerForm = {
+  name: "",
+  phone: "",
+  email: "",
+  passportId: "",
+  nationality: "",
+  address: "",
+};
 
 export default function Customers() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const canWrite = user?.role === "ADMIN" || user?.role === "AGENT";
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const [page, setPage] = React.useState(1);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<Customer | null>(null);
   const [form, setForm] = React.useState<CustomerForm>(emptyForm);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customers", debouncedSearch, page],
+    queryKey: ["customers", debouncedSearch],
     queryFn: async () => {
-      const res = await api.get("/customers", { params: { search: debouncedSearch, page, pageSize: 20 } });
-      return res.data as { items: Customer[]; total: number; page: number; pageSize: number };
+      const res = await api.get("/customers", { params: { search: debouncedSearch, pageSize: 50 } });
+      return res.data as { items: Customer[]; total: number };
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (payload: CustomerForm) => (await api.post("/customers", payload)).data,
     onSuccess: () => {
-      toast.success("Customer created");
+      toast.success("Customer added");
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      closeDialog();
+      setForm(emptyForm);
     },
-    onError: () => toast.error("Could not create customer"),
+    onError: () => toast.error("Could not add customer"),
   });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: CustomerForm }) =>
-      (await api.patch(`/customers/${id}`, payload)).data,
-    onSuccess: () => {
-      toast.success("Customer updated");
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      closeDialog();
-    },
-    onError: () => toast.error("Could not update customer"),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => api.delete(`/customers/${id}`),
-    onSuccess: () => {
-      toast.success("Customer deleted");
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-    },
-    onError: () => toast.error("Could not delete customer"),
-  });
-
-  function openCreate() {
-    setEditing(null);
-    setForm(emptyForm);
-    setDialogOpen(true);
-  }
-
-  function openEdit(customer: Customer) {
-    setEditing(customer);
-    setForm({
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email ?? "",
-      address: customer.address ?? "",
-      notes: customer.notes ?? "",
-    });
-    setDialogOpen(true);
-  }
-
-  function closeDialog() {
-    setDialogOpen(false);
-    setEditing(null);
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (editing) {
-      updateMutation.mutate({ id: editing.id, payload: form });
-    } else {
-      createMutation.mutate(form);
-    }
+    createMutation.mutate(form);
   }
-
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{data?.total ?? 0} total customers</p>
-        {canWrite && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreate}>
-                <Plus className="h-4 w-4" /> New Customer
+      {canWrite && (
+        <Card className="p-6">
+          <h2 className="mb-4 text-[15px] font-bold">New customer</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Full name *</Label>
+                <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="passportId">Passport / ID no.</Label>
+                <Input
+                  id="passportId"
+                  value={form.passportId}
+                  onChange={(e) => setForm({ ...form, passportId: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="nationality">Nationality</Label>
+                <Input
+                  id="nationality"
+                  value={form.nationality}
+                  onChange={(e) => setForm({ ...form, nationality: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Button type="submit" disabled={createMutation.isPending}>
+                Add customer
               </Button>
-            </DialogTrigger>
-            <DialogContent title={editing ? "Edit customer" : "New customer"}>
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-                </div>
-                <Button type="submit" className="w-full" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editing ? "Save changes" : "Create customer"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-
-      <div className="relative max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, phone, or email…"
-          className="pl-8"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Address</TableHead>
-            {canWrite && <TableHead className="text-right">Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && (
-            <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                Loading…
-              </TableCell>
-            </TableRow>
-          )}
-          {!isLoading && data?.items.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                No customers yet.
-              </TableCell>
-            </TableRow>
-          )}
-          {data?.items.map((customer) => (
-            <TableRow key={customer.id}>
-              <TableCell className="font-medium">{customer.name}</TableCell>
-              <TableCell>{customer.phone}</TableCell>
-              <TableCell>{customer.email || "—"}</TableCell>
-              <TableCell>{customer.address || "—"}</TableCell>
-              {canWrite && (
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(customer)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (confirm(`Delete ${customer.name}? This cannot be undone.`)) {
-                          deleteMutation.mutate(customer.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
-              Next
-            </Button>
-          </div>
-        </div>
+              <Button type="button" variant="outline" onClick={() => setForm(emptyForm)}>
+                Clear
+              </Button>
+            </div>
+          </form>
+        </Card>
       )}
+
+      <Card className="overflow-hidden p-0">
+        <h2 className="p-6 pb-0 text-[15px] font-bold">Customer directory</h2>
+        <div className="m-6 rounded-md bg-muted p-4">
+          <Label htmlFor="search">Search</Label>
+          <Input
+            id="search"
+            className="mt-1.5 max-w-sm bg-card"
+            placeholder="Name, phone or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>ID / Passport</TableHead>
+              <TableHead>Nationality</TableHead>
+              <TableHead>Bookings</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  Loading…
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && data?.items.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center italic text-muted-foreground">
+                  No customers yet. Add one above, or add a booking to create one automatically.
+                </TableCell>
+              </TableRow>
+            )}
+            {data?.items.map((customer) => (
+              <TableRow key={customer.id} className="cursor-pointer" onClick={() => navigate(`/customers/${customer.id}`)}>
+                <TableCell className="font-medium">{customer.name}</TableCell>
+                <TableCell>{customer.phone || "—"}</TableCell>
+                <TableCell>{customer.email || "—"}</TableCell>
+                <TableCell>{customer.passportId || "—"}</TableCell>
+                <TableCell>{customer.nationality || "—"}</TableCell>
+                <TableCell>{customer._count?.bookings ?? 0}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

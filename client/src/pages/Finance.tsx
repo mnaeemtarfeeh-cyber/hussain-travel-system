@@ -163,22 +163,24 @@ export default function Finance() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--navy)" }}>
+        <Card>
           <CardContent className="pt-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total income</p>
-            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalIncome)}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total income</p>
+            <p className="mt-1.5 font-mono text-xl font-semibold text-success">{money(totalIncome)}</p>
           </CardContent>
         </Card>
-        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--destructive)" }}>
+        <Card>
           <CardContent className="pt-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total expense</p>
-            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalExpense)}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total expense</p>
+            <p className="mt-1.5 font-mono text-xl font-semibold text-destructive">{money(totalExpense)}</p>
           </CardContent>
         </Card>
-        <Card style={{ borderTopWidth: 3, borderTopColor: "var(--gold)" }}>
+        <Card>
           <CardContent className="pt-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Net</p>
-            <p className="mt-1.5 font-mono text-lg font-bold text-foreground">{money(totalIncome - totalExpense)}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Net</p>
+            <p className={`mt-1.5 font-mono text-xl font-semibold ${totalIncome - totalExpense >= 0 ? "text-success" : "text-destructive"}`}>
+              {money(totalIncome - totalExpense)}
+            </p>
           </CardContent>
         </Card>
       </div>

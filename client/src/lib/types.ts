@@ -12,9 +12,24 @@ export type Customer = {
   name: string;
   phone: string;
   email?: string | null;
+  passportId?: string | null;
+  nationality?: string | null;
   address?: string | null;
   notes?: string | null;
   createdAt: string;
+  _count?: { bookings: number };
+};
+
+export type CustomerStats = {
+  totalBookings: number;
+  completedBookings: number;
+  totalSpent: number;
+  lastBookingAt: string | null;
+};
+
+export type CustomerDetail = Customer & {
+  bookings: Booking[];
+  stats: CustomerStats;
 };
 
 export type VehicleStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
@@ -52,6 +67,7 @@ export type Booking = {
   pickupLocation: string;
   dropoffLocation: string;
   pickupDate: string;
+  passengers: number;
   status: BookingStatus;
   fare: string | number;
   notes?: string | null;
@@ -60,6 +76,7 @@ export type Booking = {
   driver?: Driver | null;
   vehicle?: Vehicle | null;
   invoice?: Invoice | null;
+  createdBy?: { id: string; name: string };
 };
 
 export type InvoiceStatus = "UNPAID" | "PARTIAL" | "PAID";

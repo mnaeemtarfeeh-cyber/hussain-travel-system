@@ -9,8 +9,10 @@ customersRouter.use(requireAuth);
 
 const customerSchema = z.object({
   name: z.string().min(1),
-  phone: z.string().min(1),
+  phone: z.string().optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
+  passportId: z.string().optional(),
+  nationality: z.string().optional(),
   address: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -28,6 +30,7 @@ customersRouter.get(
             { name: { contains: search, mode: "insensitive" as const } },
             { phone: { contains: search, mode: "insensitive" as const } },
             { email: { contains: search, mode: "insensitive" as const } },
+            { passportId: { contains: search, mode: "insensitive" as const } },
           ],
         }
       : {};
@@ -38,6 +41,7 @@ customersRouter.get(
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
+        include: { _count: { select: { bookings: true } } },
       }),
       prisma.customer.count({ where }),
     ]);
@@ -51,10 +55,27 @@ customersRouter.get(
   asyncHandler(async (req, res) => {
     const customer = await prisma.customer.findUnique({
       where: { id: req.params.id as string },
-      include: { bookings: { orderBy: { createdAt: "desc" }, take: 20 } },
+      include: {
+        bookings: {
+          orderBy: { pickupDate: "desc" },
+          include: { driver: true, vehicle: true, invoice: { include: { payments: true } } },
+        },
+      },
     });
     if (!customer) return res.status(404).json({ error: "Customer not found" });
-    res.json(customer);
+
+    const totalBookings = customer.bookings.length;
+    const completedBookings = customer.bookings.filter((b) => b.status === "COMPLETED").length;
+    const totalSpent = customer.bookings.reduce((sum, b) => {
+      const paid = (b.invoice?.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+      return sum + paid;
+    }, 0);
+    const lastBooking = customer.bookings[0] ?? null;
+
+    res.json({
+      ...customer,
+      stats: { totalBookings, completedBookings, totalSpent, lastBookingAt: lastBooking?.pickupDate ?? null },
+    });
   }),
 );
 
@@ -62,7 +83,9 @@ customersRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = customerSchema.parse(req.body);
-    const customer = await prisma.customer.create({ data: { ...data, email: data.email || null } });
+    const customer = await prisma.customer.create({
+      data: { ...data, phone: data.phone || "", email: data.email || null },
+    });
     res.status(201).json(customer);
   }),
 );
@@ -72,7 +95,7 @@ customersRouter.patch(
   asyncHandler(async (req, res) => {
     const data = customerSchema.partial().parse(req.body);
     const customer = await prisma.customer.update({
-      where: { id: (req.params.id as string) },
+      where: { id: req.params.id as string },
       data: { ...data, email: data.email === "" ? null : data.email },
     });
     res.json(customer);
@@ -82,7 +105,7 @@ customersRouter.patch(
 customersRouter.delete(
   "/:id",
   asyncHandler(async (req, res) => {
-    await prisma.customer.delete({ where: { id: (req.params.id as string) } });
+    await prisma.customer.delete({ where: { id: req.params.id as string } });
     res.status(204).end();
   }),
 );

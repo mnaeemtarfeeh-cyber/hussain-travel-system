@@ -27,10 +27,10 @@ export default function Dashboard() {
   const totalBookings = Object.values(data?.bookingsByStatus ?? {}).reduce((a, b) => a + (b ?? 0), 0);
 
   const kpis = [
-    { label: "Income this month", value: money(income), accent: "var(--navy)" },
-    { label: "Expenses this month", value: money(expense), accent: "var(--destructive)" },
-    { label: "Net profit", value: money(profit), accent: "var(--gold)" },
-    { label: "Bookings this month", value: String(totalBookings), accent: "var(--navy)" },
+    { label: "Income this month", value: money(income), tone: "text-success" },
+    { label: "Expenses this month", value: money(expense), tone: "text-destructive" },
+    { label: "Net profit", value: money(profit), tone: profit >= 0 ? "text-success" : "text-destructive" },
+    { label: "Bookings this month", value: String(totalBookings), tone: "text-foreground" },
   ];
 
   return (
@@ -39,10 +39,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.label} style={{ borderTopWidth: 3, borderTopColor: kpi.accent }}>
+          <Card key={kpi.label}>
             <CardContent className="pt-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
-              <p className="mt-1.5 font-mono text-lg font-bold text-foreground">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
+              <p className={`mt-1.5 font-mono text-xl font-semibold ${kpi.tone}`}>
                 {isLoading ? "…" : kpi.value}
               </p>
             </CardContent>

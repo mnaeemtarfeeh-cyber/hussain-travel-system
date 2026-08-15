@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Pencil } from "lucide-react";
@@ -24,6 +25,7 @@ type BookingForm = {
   pickupLocation: string;
   dropoffLocation: string;
   pickupDate: string;
+  passengers: string;
   fare: string;
   notes: string;
 };
@@ -35,6 +37,7 @@ const emptyForm: BookingForm = {
   pickupLocation: "",
   dropoffLocation: "",
   pickupDate: "",
+  passengers: "1",
   fare: "",
   notes: "",
 };
@@ -49,17 +52,30 @@ const TABS: { value: string; label: string }[] = [
 
 export default function Bookings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const canWrite = user?.role === "ADMIN" || user?.role === "AGENT";
   const queryClient = useQueryClient();
   const [tab, setTab] = React.useState("ALL");
+  const [driverFilter, setDriverFilter] = React.useState("ALL");
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Booking | null>(null);
   const [form, setForm] = React.useState<BookingForm>(emptyForm);
 
   const { data: bookings, isLoading } = useQuery({
-    queryKey: ["bookings", tab],
+    queryKey: ["bookings", tab, driverFilter, dateFrom, dateTo],
     queryFn: async () =>
-      (await api.get<Booking[]>("/bookings", { params: tab === "ALL" ? {} : { status: tab } })).data,
+      (
+        await api.get<Booking[]>("/bookings", {
+          params: {
+            status: tab === "ALL" ? undefined : tab,
+            driverId: driverFilter === "ALL" ? undefined : driverFilter,
+            from: dateFrom ? new Date(dateFrom).toISOString() : undefined,
+            to: dateTo ? new Date(dateTo + "T23:59:59").toISOString() : undefined,
+          },
+        })
+      ).data,
   });
 
   const { data: customers } = useQuery({
@@ -123,6 +139,7 @@ export default function Bookings() {
       pickupLocation: booking.pickupLocation,
       dropoffLocation: booking.dropoffLocation,
       pickupDate: booking.pickupDate.slice(0, 16),
+      passengers: String(booking.passengers ?? 1),
       fare: String(booking.fare),
       notes: booking.notes ?? "",
     });
@@ -143,6 +160,7 @@ export default function Bookings() {
       pickupLocation: form.pickupLocation,
       dropoffLocation: form.dropoffLocation,
       pickupDate: new Date(form.pickupDate).toISOString(),
+      passengers: Number(form.passengers) || 1,
       fare: Number(form.fare),
       notes: form.notes,
     };
@@ -245,6 +263,17 @@ export default function Bookings() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="passengers">Passengers</Label>
+                  <Input
+                    id="passengers"
+                    type="number"
+                    min="1"
+                    required
+                    value={form.passengers}
+                    onChange={(e) => setForm({ ...form, passengers: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="fare">Fare</Label>
                   <Input
                     id="fare"
@@ -283,6 +312,46 @@ export default function Bookings() {
         </TabsList>
       </Tabs>
 
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">From</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">To</Label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Driver</Label>
+          <Select value={driverFilter} onValueChange={setDriverFilter}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All drivers</SelectItem>
+              {drivers?.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {(dateFrom || dateTo || driverFilter !== "ALL") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+              setDriverFilter("ALL");
+            }}
+          >
+            Clear filters
+          </Button>
+        )}
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -290,6 +359,7 @@ export default function Bookings() {
             <TableHead>Customer</TableHead>
             <TableHead>Route</TableHead>
             <TableHead>Pickup</TableHead>
+            <TableHead>Pax</TableHead>
             <TableHead>Fare</TableHead>
             <TableHead>Status</TableHead>
             {canWrite && <TableHead className="text-right">Actions</TableHead>}
@@ -298,32 +368,33 @@ export default function Bookings() {
         <TableBody>
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                 Loading…
               </TableCell>
             </TableRow>
           )}
           {!isLoading && bookings?.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                 No bookings in this view.
               </TableCell>
             </TableRow>
           )}
           {bookings?.map((b) => (
-            <TableRow key={b.id}>
+            <TableRow key={b.id} className="cursor-pointer" onClick={() => navigate(`/bookings/${b.id}`)}>
               <TableCell className="font-medium">{b.bookingNumber}</TableCell>
               <TableCell>{b.customer?.name}</TableCell>
               <TableCell className="max-w-48 truncate">
                 {b.pickupLocation} → {b.dropoffLocation}
               </TableCell>
               <TableCell>{format(new Date(b.pickupDate), "PP p")}</TableCell>
+              <TableCell>{b.passengers}</TableCell>
               <TableCell className="font-mono">{money(b.fare)}</TableCell>
               <TableCell>
                 <StatusBadge status={b.status} />
               </TableCell>
               {canWrite && (
-                <TableCell className="text-right">
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-1">
                     {nextStatus[b.status] && (
                       <Button

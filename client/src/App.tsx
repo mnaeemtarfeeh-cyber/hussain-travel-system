@@ -6,7 +6,9 @@ import Login from "@/pages/Login";
 
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Customers = lazy(() => import("@/pages/Customers"));
+const CustomerDetail = lazy(() => import("@/pages/CustomerDetail"));
 const Bookings = lazy(() => import("@/pages/Bookings"));
+const BookingDetail = lazy(() => import("@/pages/BookingDetail"));
 const Invoices = lazy(() => import("@/pages/Invoices"));
 const Finance = lazy(() => import("@/pages/Finance"));
 const Drivers = lazy(() => import("@/pages/Drivers"));
@@ -26,7 +28,9 @@ function App() {
           <Route element={<AppShell />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/customers/:id" element={<CustomerDetail />} />
             <Route path="/bookings" element={<Bookings />} />
+            <Route path="/bookings/:id" element={<BookingDetail />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/drivers" element={<Drivers />} />
             <Route path="/fleet" element={<Fleet />} />
